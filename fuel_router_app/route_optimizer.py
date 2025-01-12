@@ -1,5 +1,5 @@
 import requests
-from decimal import Decimal
+from django.core.cache import cache
 from typing import List, Dict, Tuple, Union, Optional
 from .models import FuelStation
 from geopy.distance import geodesic
@@ -66,6 +66,24 @@ class RouteOptimizer:
             'steps': route['legs'][0]['steps']
         }
 
+
+    def calculate_distance(self, point1: Tuple[float, float], point2: Tuple[float, float]) -> float:
+        """Check the cache for a pre-calculated distance or calculate and cache it."""
+
+        cache_key = f"distance_{point1[0]}_{point1[1]}_{point2[0]}_{point2[1]}"
+        cached_distance = cache.get(cache_key)
+
+        if cached_distance is not None:
+            return cached_distance
+
+        # If the distance is not in cache, calculate it
+        distance = geodesic(point1, point2).miles
+
+        # Cache the calculated distance for future use (expire in 24 hours)
+        cache.set(cache_key, distance, timeout=86400)
+        return distance
+    
+
     def find_optimal_fuel_stops(
             self,
             start_coords: Tuple[float, float],
@@ -110,10 +128,7 @@ class RouteOptimizer:
                 search_radius = tank_range * 0.2  # Look within 20% of tank range
 
                 for station in stations:
-                    distance = geodesic(
-                        (point[1], point[0]),  # Convert from [lon, lat] to [lat, lon]
-                        (station.lat, station.lon)
-                    ).miles
+                    distance = self.calculate_distance((point[1], point[0]), (station.lat, station.lon))
 
                     if distance <= search_radius:
                         # Calculate deviation from route
@@ -132,9 +147,9 @@ class RouteOptimizer:
                         Deviation (Detour): (D(start to station) + D(station to end)) - D(start to end)
                         """
                         deviation = (
-                                    (geodesic((point[1], point[0]), (station.lat, station.lon)).miles +
-                                    geodesic((station.lat, station.lon), end_coords).miles) -
-                                     geodesic((point[1], point[0]), end_coords).miles
+                            (self.calculate_distance((point[1], point[0]), (station.lat, station.lon)) +
+                             self.calculate_distance((station.lat, station.lon), end_coords)) -
+                            self.calculate_distance((point[1], point[0]), end_coords)
                         )
 
                         # Score based on price and deviation
@@ -156,10 +171,8 @@ class RouteOptimizer:
                     best_station = min(nearby_stations, key=lambda x: x['score'])
 
                     # Calculate gallons needed
-                    distance_since_last = geodesic(
-                        last_stop_coords,
-                        (best_station['station'].lat, best_station['station'].lon)
-                    ).miles
+                    distance_since_last = self.calculate_distance(last_stop_coords, (
+                        best_station['station'].lat, best_station['station'].lon))
 
                     gallons_needed = distance_since_last / mpg
 
@@ -182,10 +195,10 @@ class RouteOptimizer:
 
             # Update remaining range
             if i > 0:
-                distance_covered = geodesic(
+                distance_covered = self.calculate_distance(
                     (sampled_points[i - 1][1], sampled_points[i - 1][0]),
                     (point[1], point[0])
-                ).miles
+                )
                 remaining_range -= distance_covered
 
         total_cost = sum(stop['cost'] for stop in fuel_stops)

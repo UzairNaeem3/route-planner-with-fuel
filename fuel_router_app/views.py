@@ -67,7 +67,7 @@ class RoutePlannerView(APIView):
         # Add route with a smoother Polyline
         folium.PolyLine(
             [(lat, lon) for lon, lat in coordinates],
-            weight=3,
+            weight=5,
             color='blue',
             opacity=0.7
         ).add_to(m)
