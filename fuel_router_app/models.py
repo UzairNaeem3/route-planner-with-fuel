@@ -13,3 +13,6 @@ class FuelStation(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.city}, {self.state}"
+    
+    class Meta:
+        db_table = 'route_fuelstation'

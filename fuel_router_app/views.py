@@ -25,7 +25,7 @@ class RoutePlannerView(APIView):
 
             # Calculate optimal stops
             result = route_service.find_optimal_fuel_stops(
-                (start_lat, start_lon), (end_lat, end_lon)
+                (start_lat, start_lon), (end_lat, end_lon),
                 route_data['geometry'], route_data['distance'], tank_range=500, mpg=10
                 )
             
