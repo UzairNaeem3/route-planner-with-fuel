@@ -77,7 +77,7 @@ This Django application provides an API designed to calculate and display:
 ## Example Map
 Below is an example of the route map with marked fuel stops:
 
-![Route Map](example-map.png)
+![Route Map](https://github.com/UzairNaeem3/route-planner-with-fuel/blob/master/LA_NY.png)
 
 ## Fuel Price Dataset
 - The API uses a provided dataset containing fuel prices across various locations in the USA. Ensure the dataset is placed in the specified folder before running the server.
