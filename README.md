@@ -66,12 +66,12 @@ This Django application provides an API designed to calculate and display:
    **Response**:
    ```json
    {
-       "route_coordinates": [<Coordinates between start and end location>],
-       "map_url": "<URL-to-route-map>",
-       "fuel_stops": [Fuel stops along the route],
-       "total_cost": <price>,
-       "total_distance": <distance of the route>
-   }
+    "route_coordinates": ["Coordinates between start and end location"],
+    "map_url": "URL-to-route-map",
+    "fuel_stops": ["Fuel stops along the route"],
+    "total_cost": 123.45,
+    "total_distance": 500.0
+}
    ```
 
 ## Example Map
